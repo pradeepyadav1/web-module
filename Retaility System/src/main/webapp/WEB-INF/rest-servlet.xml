@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+        
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:mvc="http://www.springframework.org/schema/mvc"
+  xmlns:tx="http://www.springframework.org/schema/tx"
+  xmlns:p="http://www.springframework.org/schema/p"
+  xmlns:sec="http://www.springframework.org/schema/security"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-4.0.xsd 
+    http://www.springframework.org/schema/tx 
+    http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+    http://www.springframework.org/schema/security
+	http://www.springframework.org/schema/security/spring-security-3.2.xsd
+    http://www.springframework.org/schema/mvc
+    http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd"
+    >
+	
+    <!-- <sec:global-method-security pre-post-annotations="enabled" proxy-target-class="true">
+you could also wire in the expression handler up at the layer of the http filters. See https://jira.springsource.org/browse/SEC-1452
+<sec:expression-handler ref="oauthExpressionHandler" />
+</sec:global-method-security> -->
+    
+	<mvc:annotation-driven />
+	<context:annotation-config />
+	<mvc:default-servlet-handler/>
+	<context:component-scan base-package="com.tech.webservice" />
+	<context:component-scan base-package="com.tech.service" />
+	<context:component-scan base-package="com.tech.dao" />
+	<context:component-scan base-package="base.hibernate.dao.access.impl" />
+	<context:component-scan base-package="com.tech.controller" />
+	
+	
+	
+	
+	<bean id="jspViewResolver"
+        class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="viewClass"
+            value="org.springframework.web.servlet.view.JstlView"></property>
+        <property name="prefix" value="/WEB-INF/views/"></property>
+        <property name="suffix" value=".jsp"></property>
+    </bean>
+    
+	
+	<!-- Tiles configuration -->
+
+	<bean id="tilesConfigurer"
+		class="org.springframework.web.servlet.view.tiles3.TilesConfigurer">
+		<property name="definitions">
+			<list>
+				<value>/WEB-INF/tiles/tiles-definitions.xml</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+		<property name="viewClass" value="org.springframework.web.servlet.view.tiles3.TilesView" />
+	</bean>
+	
+	<!-- End Tiles  -->
+	
+	 <bean id="messageSource"
+        class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <property name="basename" value="classpath:messages"></property>
+        <property name="defaultEncoding" value="UTF-8"></property>
+    </bean>
+    
+	 
+	 <!-- Configure to plugin JSON as request and response in method handler -->
+    <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+        <property name="messageConverters">
+            <list>
+                <ref bean="jsonMessageConverter"/>
+            </list>
+        </property>
+    </bean>
+     
+    <!-- Configure bean to convert JSON to POJO and vice versa -->
+    <bean id="jsonMessageConverter" class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+    </bean> 
+    
+	 <!-- application.properties -->
+	 <!-- JDBC properties file -->
+	 <bean id="propertyConfigurer"
+        class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"
+        p:location="/WEB-INF/jdbc.properties">	     
+	 </bean>
+
+
+
+	<!-- <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close" p:driverClassName="${jdbc.driverClassName}"
+		p:url="${jdbc.url}" p:username="${jdbc.username}" p:password="${jdbc.password}">
+	</bean> -->
+	
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="${jdbc.driverClassName}" />
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}" />
+        <property name="password" value="${jdbc.password}"/>
+         
+    </bean>
+        
+        
+        <!-- Session Factory -->
+    <bean id="sessionFactory"
+        class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"></property>
+        <property name="annotatedClasses">    
+            <list>    
+                <value>com.tech.dao.model.Brand</value>    
+            </list>    
+        </property>
+        <!-- <property name="configLocation">
+            <value>classpath:hibernate.cfg.xml</value>
+        </property> -->
+        <!-- <property name="configurationClass">
+            <value>org.hibernate.cfg.AnnotationConfiguration</value>
+        </property> -->
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">${hibernate.dialect}</prop>
+                <prop key="hibernate.show_sql">true</prop>
+            </props>
+        </property>
+    </bean>
+	 
+	<tx:annotation-driven />
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+    <bean id="transactionManager"
+        class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"></property>
+    </bean>
+  </beans>
